@@ -96,7 +96,7 @@ def range_to_networks(network_range: str) -> Iterable[ipaddress.IPv4Network]:
     last = ipaddress.IPv4Address(parts[1])
     return ipaddress.summarize_address_range(first, last)
 
-def list_networks(country_code: str) -> Iterable[ipaddress.IPv4Network]:
+def list_networks(country_code: str, max_diff: int = 0) -> Iterable[ipaddress.IPv4Network]:
     ipdeny_networks = set(list_ipdeny(country_code))
     ripestat_networks = set(list_ripestat(country_code))
     if ipdeny_networks == ripestat_networks:
@@ -108,9 +108,11 @@ def list_networks(country_code: str) -> Iterable[ipaddress.IPv4Network]:
     ipdeny_missing = ripestat_networks.difference(ipdeny_networks)
     if ipdeny_missing:
         messages.append("networks present in RIPEstat but not in IPdeny: %s" % ipdeny_missing)
-    raise ValueError("\n".join(messages))
+    if len(ripestat_missing) + len(ipdeny_missing) > max_diff:
+        raise ValueError("\n".join(messages))
+    return ipdeny_networks & ripestat_networks
 
-def ipset(country_code: str) -> Iterable[str]:
+def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:
     # set name must be shorter than 32 characters
     set_name = "country-%s" % country_code
     tmp_set_name = "country-%s.tmp-%s" % (
@@ -127,7 +129,7 @@ def ipset(country_code: str) -> Iterable[str]:
     )
     commands = (
         "add %s %s" % (tmp_set_name, network)
-        for network in sorted(list_networks(country_code))
+        for network in sorted(list_networks(country_code, max_diff))
     )
     return itertools.chain(header, commands, footer)
 
@@ -137,8 +139,12 @@ def main() -> None:
         description="Generate a country based IP set for packet filtering in the Linux kernel."
     )
     parser.add_argument("country_code", help="two letter ISO-3166 country code")
+    parser.add_argument(
+        "-i", dest="max_diff", type=int, metavar="N", default=0,
+        help="ignore up to N networks of difference between data sources"
+    )
     args = parser.parse_args()
-    for line in ipset(args.country_code):
+    for line in ipset(args.country_code, args.max_diff):
         print(line)
 
 if __name__ == "__main__":

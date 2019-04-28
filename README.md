@@ -26,8 +26,10 @@ Here are some features unique to this script:
 	- [IPdeny](http://www.ipdeny.com/ipblocks/)
 	- [RIPEstat Data API](https://stat.ripe.net/docs/data_api#country-resource-list)
 
-  If there's a mismatch between the two sources, an error message is displayed
-  and the set is not generated.
+  By default, if there's a mismatch between the two sources, an error message is
+  displayed and the set is not generated. You can opt to ignore a limited number
+  of differences by using the `-i` parameter. Sets generated in this manner
+  contain only networks that are present in both data sources.
 
 - Generate a list of commands (a session) that can be fed into `ipset restore`
   instead of directly executing `ipset`. This has several advantages:
