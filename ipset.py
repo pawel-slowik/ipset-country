@@ -102,10 +102,10 @@ def list_networks(country_code: str, max_diff: int = 0) -> Iterable[ipaddress.IP
     if ipdeny_networks == ripestat_networks:
         return ipdeny_networks
     messages = []
-    ripestat_missing = ipdeny_networks.difference(ripestat_networks)
+    ripestat_missing = ipdeny_networks - ripestat_networks
     if ripestat_missing:
         messages.append("networks present in IPdeny but not in RIPEstat: %s" % ripestat_missing)
-    ipdeny_missing = ripestat_networks.difference(ipdeny_networks)
+    ipdeny_missing = ripestat_networks - ipdeny_networks
     if ipdeny_missing:
         messages.append("networks present in RIPEstat but not in IPdeny: %s" % ipdeny_missing)
     if len(ripestat_missing) + len(ipdeny_missing) > max_diff:
