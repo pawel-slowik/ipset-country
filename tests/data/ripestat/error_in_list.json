@@ -1,0 +1,27 @@
+{
+    "status": "ok",
+    "server_id": "app000",
+    "status_code": 200,
+    "version": "0.2",
+    "cached": false,
+    "see_also": [],
+    "time": "2019-05-02T00:00:00.000000",
+    "messages": [],
+    "data_call_status": "supported - connecting to ursa",
+    "process_time": 0,
+    "build_version": "2019.5.1.00",
+    "query_id": "00000000000000-00000000-0000-0000-0000-000000000000",
+    "data": {
+        "query_time": "2019-05-01T00:00:00",
+        "resources": {
+            "ipv6": [
+            ],
+            "asn": [
+                "123456"
+            ],
+            "ipv4": [
+                ""
+            ]
+        }
+    }
+}
