@@ -1,3 +1,8 @@
+[![Build Status][build-badge]][build-url]
+
+[build-badge]: https://travis-ci.org/pawel-slowik/ipset-country.svg?branch=master
+[build-url]: https://travis-ci.org/pawel-slowik/ipset-country
+
 Generate country based [IP sets](http://ipset.netfilter.org/) for packet
 filtering in the Linux kernel.
 
