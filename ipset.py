@@ -10,11 +10,14 @@ import http.client
 from http import HTTPStatus
 from typing import Iterable, Mapping, Type, IO, Optional
 
+
 def list_ipdeny(country_code: str) -> Iterable[ipaddress.IPv4Network]:
     return parse_ipdeny(open_url(get_ipdeny_url(country_code)))
 
+
 def get_ipdeny_url(country_code: str) -> str:
     return "http://www.ipdeny.com/ipblocks/data/aggregated/%s-aggregated.zone" % country_code
+
 
 def parse_ipdeny(text_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
     return (
@@ -22,14 +25,17 @@ def parse_ipdeny(text_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
         for input_network in text_input
     )
 
+
 def list_ripestat(country_code: str) -> Iterable[ipaddress.IPv4Network]:
     networks = parse_ripestat(open_url(get_ripestat_url(country_code)))
     # RIPEstat data is not aggregated, needs collapsing
     networks = ipaddress.collapse_addresses(networks)
     return networks
 
+
 def get_ripestat_url(country_code: str) -> str:
     return "https://stat.ripe.net/data/country-resource-list/data.json?resource=%s" % country_code
+
 
 def parse_ripestat(json_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
 
@@ -40,7 +46,7 @@ def parse_ripestat(json_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
             return "\n".join(error_response["messages"])
         return None
 
-    ascii_reader = codecs.getreader("ascii") # json.load doesn't support bytes in Python < 3.6
+    ascii_reader = codecs.getreader("ascii")  # json.load doesn't support bytes in Python < 3.6
     response = json.load(ascii_reader(json_input))
     if response["status_code"] != HTTPStatus.OK or response["status"] != "ok":
         raise ValueError(
@@ -57,6 +63,7 @@ def parse_ripestat(json_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
         for input_network in response["data"]["resources"]["ipv4"]
     )
 
+
 def ripestat_resource_to_networks(network_spec: str) -> Iterable[ipaddress.IPv4Network]:
     try:
         return [ipaddress.IPv4Network(network_spec)]
@@ -66,6 +73,7 @@ def ripestat_resource_to_networks(network_spec: str) -> Iterable[ipaddress.IPv4N
         except ValueError:
             pass
         raise
+
 
 def open_url(url: str) -> IO[bytes]:
 
@@ -88,6 +96,7 @@ def open_url(url: str) -> IO[bytes]:
         raise ValueError("unexpected HTTP code: %d" % response.status)
     return response
 
+
 def range_to_networks(network_range: str) -> Iterable[ipaddress.IPv4Network]:
     parts = network_range.split("-")
     if len(parts) != 2:
@@ -95,6 +104,7 @@ def range_to_networks(network_range: str) -> Iterable[ipaddress.IPv4Network]:
     first = ipaddress.IPv4Address(parts[0])
     last = ipaddress.IPv4Address(parts[1])
     return ipaddress.summarize_address_range(first, last)
+
 
 def list_networks(country_code: str, max_diff: int = 0) -> Iterable[ipaddress.IPv4Network]:
     ipdeny_networks = set(list_ipdeny(country_code))
@@ -111,6 +121,7 @@ def list_networks(country_code: str, max_diff: int = 0) -> Iterable[ipaddress.IP
     if len(ripestat_missing) + len(ipdeny_missing) > max_diff:
         raise ValueError("\n".join(messages))
     return ipdeny_networks & ripestat_networks
+
 
 def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:
     # set name must be shorter than 32 characters
@@ -133,6 +144,7 @@ def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:
     )
     return itertools.chain(header, commands, footer)
 
+
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(
@@ -146,6 +158,7 @@ def main() -> None:
     args = parser.parse_args()
     for line in ipset(args.country_code, args.max_diff):
         print(line)
+
 
 if __name__ == "__main__":
     main()
