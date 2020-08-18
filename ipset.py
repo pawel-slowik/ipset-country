@@ -124,12 +124,8 @@ def list_networks(country_code: str, max_diff: int = 0) -> Iterable[ipaddress.IP
 
 
 def ipset_commands(country_code: str, networks: Iterable[ipaddress.IPv4Network]) -> Iterable[str]:
-    # set name must be shorter than 32 characters
-    set_name = "country-%s" % country_code
-    tmp_set_name = "country-%s.tmp-%s" % (
-        country_code,
-        time.strftime("%Y%m%d%H%M%S", time.gmtime()),
-    )
+    set_name = create_target_set_name(country_code)
+    tmp_set_name = create_temporary_set_name(country_code)
     header = (
         "create -exist %s hash:net" % set_name,
         "create %s hash:net" % tmp_set_name,
@@ -143,6 +139,17 @@ def ipset_commands(country_code: str, networks: Iterable[ipaddress.IPv4Network])
         for network in sorted(networks)
     )
     return itertools.chain(header, commands, footer)
+
+
+def create_target_set_name(country_code: str) -> str:
+    return "country-%s" % country_code
+
+
+def create_temporary_set_name(country_code: str) -> str:
+    return "country-%s.tmp-%s" % (
+        country_code,
+        time.strftime("%Y%m%d%H%M%S", time.gmtime()),
+    )
 
 
 def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:
