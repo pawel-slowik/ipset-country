@@ -123,7 +123,7 @@ def list_networks(country_code: str, max_diff: int = 0) -> Iterable[ipaddress.IP
     return ipdeny_networks & ripestat_networks
 
 
-def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:
+def ipset_commands(country_code: str, networks: Iterable[ipaddress.IPv4Network]) -> Iterable[str]:
     # set name must be shorter than 32 characters
     set_name = "country-%s" % country_code
     tmp_set_name = "country-%s.tmp-%s" % (
@@ -140,9 +140,13 @@ def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:
     )
     commands = (
         "add %s %s" % (tmp_set_name, network)
-        for network in sorted(list_networks(country_code, max_diff))
+        for network in sorted(networks)
     )
     return itertools.chain(header, commands, footer)
+
+
+def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:
+    return ipset_commands(country_code, list_networks(country_code, max_diff))
 
 
 def main() -> None:
