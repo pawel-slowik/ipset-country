@@ -1,8 +1,7 @@
-[![Build Status][build-badge]][build-url]
+![Build Status][build-badge]
 [![Coverage][coverage-badge]][coverage-url]
 
-[build-badge]: https://travis-ci.org/pawel-slowik/ipset-country.svg?branch=master
-[build-url]: https://travis-ci.org/pawel-slowik/ipset-country
+[build-badge]: https://github.com/pawel-slowik/ipset-country/workflows/tests/badge.svg
 [coverage-badge]: https://codecov.io/gh/pawel-slowik/ipset-country/branch/master/graph/badge.svg
 [coverage-url]: https://codecov.io/gh/pawel-slowik/ipset-country
 
