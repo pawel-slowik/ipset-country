@@ -119,14 +119,14 @@ def common_networks(
     ripestat_networks = set(ripestat_networks)
     if ipdeny_networks == ripestat_networks:
         return ipdeny_networks
-    messages = []
     ripestat_missing = ipdeny_networks - ripestat_networks
-    if ripestat_missing:
-        messages.append("networks present in IPdeny but not in RIPEstat: %s" % ripestat_missing)
     ipdeny_missing = ripestat_networks - ipdeny_networks
-    if ipdeny_missing:
-        messages.append("networks present in RIPEstat but not in IPdeny: %s" % ipdeny_missing)
     if len(ripestat_missing) + len(ipdeny_missing) > max_diff:
+        messages = []
+        if ripestat_missing:
+            messages.append("networks present in IPdeny but not in RIPEstat: %s" % ripestat_missing)
+        if ipdeny_missing:
+            messages.append("networks present in RIPEstat but not in IPdeny: %s" % ipdeny_missing)
         raise ValueError("\n".join(messages))
     return ipdeny_networks & ripestat_networks
 
