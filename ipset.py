@@ -4,7 +4,6 @@ import ipaddress
 import itertools
 import json
 import urllib.parse
-import codecs
 import time
 import http.client
 from http import HTTPStatus
@@ -54,8 +53,7 @@ def parse_ripestat(json_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
             return "\n".join(error_response["messages"])
         return None
 
-    ascii_reader = codecs.getreader("ascii")  # json.load doesn't support bytes in Python < 3.6
-    response = json.load(ascii_reader(json_input))
+    response = json.load(json_input)
     if response["status_code"] != HTTPStatus.OK or response["status"] != "ok":
         raise ValueError(
             "error in RIPEstat response: status_code=%s, status=%s, message=%s" % (
