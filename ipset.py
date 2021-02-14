@@ -129,12 +129,12 @@ def common_networks(
         if comparision.ripestat_missing:
             messages.append(
                 "networks present in IPdeny but not in RIPEstat: %s"
-                % comparision.ripestat_missing
+                % ", ".join(map(str, comparision.ripestat_missing))
             )
         if comparision.ipdeny_missing:
             messages.append(
                 "networks present in RIPEstat but not in IPdeny: %s"
-                % comparision.ipdeny_missing
+                % ", ".join(map(str, comparision.ipdeny_missing))
             )
         messages.append("total number of differences: %d" % comparision.differences_count)
         raise ValueError("\n".join(messages))
