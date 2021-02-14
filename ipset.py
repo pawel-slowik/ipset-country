@@ -8,7 +8,15 @@ import codecs
 import time
 import http.client
 from http import HTTPStatus
-from typing import Iterable, Mapping, Type, IO, Optional
+from typing import Iterable, Mapping, Collection, NamedTuple, Type, IO, Optional
+
+
+ComparisionResult = NamedTuple("ComparisionResult", [
+    ("common_networks", Collection[ipaddress.IPv4Network]),
+    ("ipdeny_missing", Collection[ipaddress.IPv4Network]),
+    ("ripestat_missing", Collection[ipaddress.IPv4Network]),
+    ("differences_count", int),
+])
 
 
 def list_ipdeny(country_code: str) -> Iterable[ipaddress.IPv4Network]:
@@ -115,22 +123,30 @@ def common_networks(
         ripestat_networks: Iterable[ipaddress.IPv4Network],
         max_diff: int,
     ) -> Iterable[ipaddress.IPv4Network]:
-    ipdeny_networks = set(ipdeny_networks)
-    ripestat_networks = set(ripestat_networks)
-    if ipdeny_networks == ripestat_networks:
-        return ipdeny_networks
-    ripestat_missing = ipdeny_networks - ripestat_networks
-    ipdeny_missing = ripestat_networks - ipdeny_networks
-    total_differences = len(ripestat_missing) + len(ipdeny_missing)
-    if total_differences > max_diff:
+    comparision = compare_networks(ipdeny_networks, ripestat_networks)
+    if comparision.differences_count > max_diff:
         messages = []
-        if ripestat_missing:
-            messages.append("networks present in IPdeny but not in RIPEstat: %s" % ripestat_missing)
-        if ipdeny_missing:
-            messages.append("networks present in RIPEstat but not in IPdeny: %s" % ipdeny_missing)
-        messages.append("total number of differences: %d" % total_differences)
+        if comparision.ripestat_missing:
+            messages.append("networks present in IPdeny but not in RIPEstat: %s" % comparision.ripestat_missing)
+        if comparision.ipdeny_missing:
+            messages.append("networks present in RIPEstat but not in IPdeny: %s" % comparision.ipdeny_missing)
+        messages.append("total number of differences: %d" % comparision.differences_count)
         raise ValueError("\n".join(messages))
-    return ipdeny_networks & ripestat_networks
+    return comparision.common_networks
+
+
+def compare_networks(
+        ipdeny_networks: Iterable[ipaddress.IPv4Network],
+        ripestat_networks: Iterable[ipaddress.IPv4Network],
+) -> ComparisionResult:
+    ipdeny_networks = frozenset(ipdeny_networks)
+    ripestat_networks = frozenset(ripestat_networks)
+    return ComparisionResult(
+        common_networks=ipdeny_networks & ripestat_networks,
+        ipdeny_missing=ripestat_networks - ipdeny_networks,
+        ripestat_missing=ipdeny_networks - ripestat_networks,
+        differences_count=len(ipdeny_networks - ripestat_networks) + len(ripestat_networks - ipdeny_networks),
+    )
 
 
 def ipset_commands(country_code: str, networks: Iterable[ipaddress.IPv4Network]) -> Iterable[str]:
