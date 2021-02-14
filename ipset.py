@@ -145,7 +145,7 @@ def compare_networks(
         common_networks=ipdeny_networks & ripestat_networks,
         ipdeny_missing=ripestat_networks - ipdeny_networks,
         ripestat_missing=ipdeny_networks - ripestat_networks,
-        differences_count=len(ipdeny_networks - ripestat_networks) + len(ripestat_networks - ipdeny_networks),
+        differences_count=len(ipdeny_networks ^ ripestat_networks),
     )
 
 
