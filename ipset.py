@@ -125,19 +125,7 @@ def common_networks(
     ) -> Iterable[ipaddress.IPv4Network]:
     comparision = compare_networks(ipdeny_networks, ripestat_networks)
     if comparision.differences_count > max_diff:
-        messages = []
-        if comparision.ripestat_missing:
-            messages.append(
-                "networks present in IPdeny but not in RIPEstat: %s"
-                % ", ".join(map(str, comparision.ripestat_missing))
-            )
-        if comparision.ipdeny_missing:
-            messages.append(
-                "networks present in RIPEstat but not in IPdeny: %s"
-                % ", ".join(map(str, comparision.ipdeny_missing))
-            )
-        messages.append("total number of differences: %d" % comparision.differences_count)
-        raise ValueError("\n".join(messages))
+        raise ValueError("\n".join(comparision_error_messages(comparision)))
     return comparision.common_networks
 
 
@@ -153,6 +141,18 @@ def compare_networks(
         ripestat_missing=ipdeny_networks - ripestat_networks,
         differences_count=len(ipdeny_networks ^ ripestat_networks),
     )
+
+
+def comparision_error_messages(comparision: ComparisionResult) -> Iterable[str]:
+    if comparision.ripestat_missing:
+        yield "networks present in IPdeny but not in RIPEstat: %s" % (
+            ", ".join(map(str, comparision.ripestat_missing)),
+        )
+    if comparision.ipdeny_missing:
+        yield "networks present in RIPEstat but not in IPdeny: %s" % (
+            ", ".join(map(str, comparision.ipdeny_missing)),
+        )
+    yield "total number of differences: %d" % comparision.differences_count
 
 
 def ipset_commands(country_code: str, networks: Iterable[ipaddress.IPv4Network]) -> Iterable[str]:
