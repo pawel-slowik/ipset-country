@@ -8,6 +8,7 @@ import time
 import http.client
 from http import HTTPStatus
 from typing import Iterable, Mapping, Collection, NamedTuple, Type, IO, Optional
+import argparse
 
 
 ComparisionResult = NamedTuple("ComparisionResult", [
@@ -187,7 +188,6 @@ def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:
 
 
 def main() -> None:
-    import argparse
     parser = argparse.ArgumentParser(
         description="Generate a country based IP set for packet filtering in the Linux kernel."
     )
