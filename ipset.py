@@ -24,7 +24,7 @@ def list_ipdeny(country_code: str) -> Iterable[ipaddress.IPv4Network]:
 
 
 def get_ipdeny_url(country_code: str) -> str:
-    return "http://www.ipdeny.com/ipblocks/data/aggregated/%s-aggregated.zone" % country_code
+    return f"http://www.ipdeny.com/ipblocks/data/aggregated/{country_code}-aggregated.zone"
 
 
 def parse_ipdeny(text_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
@@ -42,7 +42,7 @@ def list_ripestat(country_code: str) -> Iterable[ipaddress.IPv4Network]:
 
 
 def get_ripestat_url(country_code: str) -> str:
-    return "https://stat.ripe.net/data/country-resource-list/data.json?resource=%s" % country_code
+    return f"https://stat.ripe.net/data/country-resource-list/data.json?resource={country_code}"
 
 
 def parse_ripestat(json_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
