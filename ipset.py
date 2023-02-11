@@ -57,14 +57,10 @@ def parse_ripestat(json_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
     response = json.load(json_input)
     if response["status_code"] != HTTPStatus.OK or response["status"] != "ok":
         raise ValueError(
-            "error in RIPEstat response: status_code=%s, status=%s, message=%s" % (
-                response["status_code"],
-                response["status"],
-                error_message(response),
-            )
+            f"error in RIPEstat response: status_code={response['status_code']}, status={response['status']}, message={error_message(response)}"
         )
     if not response["data_call_status"].startswith("supported"):
-        raise ValueError("unexpected RIPEstat data_call_status: %s" % response["data_call_status"])
+        raise ValueError(f"unexpected RIPEstat data_call_status: {response['data_call_status']}")
     return itertools.chain.from_iterable(
         ripestat_resource_to_networks(input_network)
         for input_network in response["data"]["resources"]["ipv4"]
@@ -100,7 +96,7 @@ def open_url(url: str) -> IO[bytes]:
     connection.request("GET", url_without_netloc(url))
     response = connection.getresponse()
     if response.status != HTTPStatus.OK:
-        raise ValueError("unexpected HTTP code: %d" % response.status)
+        raise ValueError(f"unexpected HTTP code: {response.status}")
     return response
 
 
@@ -144,43 +140,36 @@ def compare_networks(
 
 def comparision_error_messages(comparision: ComparisionResult) -> Iterable[str]:
     if comparision.ripestat_missing:
-        yield "networks present in IPdeny but not in RIPEstat: %s" % (
-            ", ".join(map(str, comparision.ripestat_missing)),
-        )
+        yield f"networks present in IPdeny but not in RIPEstat: {', '.join(map(str, comparision.ripestat_missing))}"
     if comparision.ipdeny_missing:
-        yield "networks present in RIPEstat but not in IPdeny: %s" % (
-            ", ".join(map(str, comparision.ipdeny_missing)),
-        )
-    yield "total number of differences: %d" % comparision.differences_count
+        yield f"networks present in RIPEstat but not in IPdeny: {', '.join(map(str, comparision.ipdeny_missing))}"
+    yield f"total number of differences: {comparision.differences_count}"
 
 
 def ipset_commands(country_code: str, networks: Iterable[ipaddress.IPv4Network]) -> Iterable[str]:
     set_name = create_target_set_name(country_code)
     tmp_set_name = create_temporary_set_name(country_code)
     header = (
-        "create -exist %s hash:net" % set_name,
-        "create %s hash:net" % tmp_set_name,
+        f"create -exist {set_name} hash:net",
+        f"create {tmp_set_name} hash:net",
     )
     footer = (
-        "swap %s %s" % (set_name, tmp_set_name),
-        "destroy %s" % tmp_set_name,
+        f"swap {set_name} {tmp_set_name}",
+        f"destroy {tmp_set_name}",
     )
     commands = (
-        "add %s %s" % (tmp_set_name, network)
+        f"add {tmp_set_name} {network}"
         for network in sorted(networks)
     )
     return itertools.chain(header, commands, footer)
 
 
 def create_target_set_name(country_code: str) -> str:
-    return "country-%s" % country_code
+    return f"country-{country_code}"
 
 
 def create_temporary_set_name(country_code: str) -> str:
-    return "country-%s.tmp-%s" % (
-        country_code,
-        time.strftime("%Y%m%d%H%M%S", time.gmtime()),
-    )
+    return f"country-{country_code}.tmp-{time.strftime('%Y%m%d%H%M%S', time.gmtime())}"
 
 
 def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:
