@@ -57,7 +57,10 @@ def parse_ripestat(json_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
     response = json.load(json_input)
     if response["status_code"] != HTTPStatus.OK or response["status"] != "ok":
         raise ValueError(
-            f"error in RIPEstat response: status_code={response['status_code']}, status={response['status']}, message={error_message(response)}"
+            "error in RIPEstat response: " +
+            f"status_code={response['status_code']}, " +
+            f"status={response['status']}, " +
+            f"message={error_message(response)}"
         )
     if not response["data_call_status"].startswith("supported"):
         raise ValueError(f"unexpected RIPEstat data_call_status: {response['data_call_status']}")
@@ -140,9 +143,13 @@ def compare_networks(
 
 def comparision_error_messages(comparision: ComparisionResult) -> Iterable[str]:
     if comparision.ripestat_missing:
-        yield f"networks present in IPdeny but not in RIPEstat: {', '.join(map(str, comparision.ripestat_missing))}"
+        yield "networks present in IPdeny but not in RIPEstat: " + ", ".join(
+            map(str, comparision.ripestat_missing)
+        )
     if comparision.ipdeny_missing:
-        yield f"networks present in RIPEstat but not in IPdeny: {', '.join(map(str, comparision.ipdeny_missing))}"
+        yield "networks present in RIPEstat but not in IPdeny: " + ", ".join(
+            map(str, comparision.ipdeny_missing)
+        )
     yield f"total number of differences: {comparision.differences_count}"
 
 
