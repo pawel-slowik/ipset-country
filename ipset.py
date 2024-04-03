@@ -11,12 +11,11 @@ from typing import Iterable, Mapping, Collection, NamedTuple, Type, IO, Optional
 import argparse
 
 
-ComparisionResult = NamedTuple("ComparisionResult", [
-    ("common_networks", Collection[ipaddress.IPv4Network]),
-    ("ipdeny_missing", Collection[ipaddress.IPv4Network]),
-    ("ripestat_missing", Collection[ipaddress.IPv4Network]),
-    ("differences_count", int),
-])
+class ComparisionResult(NamedTuple):
+    common_networks: Collection[ipaddress.IPv4Network]
+    ipdeny_missing: Collection[ipaddress.IPv4Network]
+    ripestat_missing: Collection[ipaddress.IPv4Network]
+    differences_count: int
 
 
 def list_ipdeny(country_code: str) -> Iterable[ipaddress.IPv4Network]:
