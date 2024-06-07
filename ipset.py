@@ -4,10 +4,11 @@ import ipaddress
 import itertools
 import json
 import urllib.parse
+import urllib.request
 import time
 import http.client
 from http import HTTPStatus
-from typing import Iterable, Mapping, Collection, NamedTuple, Type, IO, Optional
+from typing import Iterable, Mapping, Collection, NamedTuple, Optional
 import argparse
 
 
@@ -19,22 +20,22 @@ class ComparisionResult(NamedTuple):
 
 
 def list_ipdeny(country_code: str) -> Iterable[ipaddress.IPv4Network]:
-    return parse_ipdeny(open_url(get_ipdeny_url(country_code)))
+    return parse_ipdeny(read_url(get_ipdeny_url(country_code)))
 
 
 def get_ipdeny_url(country_code: str) -> str:
     return f"http://www.ipdeny.com/ipblocks/data/aggregated/{country_code}-aggregated.zone"
 
 
-def parse_ipdeny(text_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
+def parse_ipdeny(text_input: bytes) -> Iterable[ipaddress.IPv4Network]:
     return (
         ipaddress.IPv4Network(input_network.decode("ascii").strip())
-        for input_network in text_input
+        for input_network in text_input.splitlines()
     )
 
 
 def list_ripestat(country_code: str) -> Iterable[ipaddress.IPv4Network]:
-    networks = parse_ripestat(open_url(get_ripestat_url(country_code)))
+    networks = parse_ripestat(read_url(get_ripestat_url(country_code)))
     # RIPEstat data is not aggregated, needs collapsing
     networks = ipaddress.collapse_addresses(networks)
     return networks
@@ -44,7 +45,7 @@ def get_ripestat_url(country_code: str) -> str:
     return f"https://stat.ripe.net/data/country-resource-list/data.json?resource={country_code}"
 
 
-def parse_ripestat(json_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
+def parse_ripestat(json_input: bytes) -> Iterable[ipaddress.IPv4Network]:
 
     def error_message(error_response: Mapping) -> Optional[str]:
         if "message" in error_response:
@@ -53,7 +54,7 @@ def parse_ripestat(json_input: IO[bytes]) -> Iterable[ipaddress.IPv4Network]:
             return "\n".join(error_response["messages"])
         return None
 
-    response = json.load(json_input)
+    response = json.loads(json_input)
     if response["status_code"] != HTTPStatus.OK or response["status"] != "ok":
         raise ValueError(
             "error in RIPEstat response: " +
@@ -80,26 +81,12 @@ def ripestat_resource_to_networks(network_spec: str) -> Iterable[ipaddress.IPv4N
         raise
 
 
-def open_url(url: str) -> IO[bytes]:
-
-    def connection_class(scheme: str) -> Type[http.client.HTTPConnection]:
-        scheme_class_map = {
-            "http": http.client.HTTPConnection,
-            "https": http.client.HTTPSConnection,
-        }
-        return scheme_class_map[scheme.lower()]
-
-    def url_without_netloc(url: str) -> str:
-        split = urllib.parse.urlsplit(url)
-        return urllib.parse.urlunsplit(("", "", split.path, split.query, split.fragment))
-
-    parts = urllib.parse.urlparse(url)
-    connection = connection_class(parts.scheme)(parts.netloc)
-    connection.request("GET", url_without_netloc(url))
-    response = connection.getresponse()
-    if response.status != HTTPStatus.OK:
-        raise ValueError(f"unexpected HTTP code: {response.status}")
-    return response
+def read_url(url: str) -> bytes:
+    response : http.client.HTTPResponse
+    with urllib.request.urlopen(url) as response:
+        if response.getcode() != HTTPStatus.OK:
+            raise ValueError(f"unexpected HTTP code: {response.getcode()}")
+        return response.read()
 
 
 def range_to_networks(network_range: str) -> Iterable[ipaddress.IPv4Network]:
