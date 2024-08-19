@@ -1,0 +1,46 @@
+- name: update ipset country bans
+  hosts: ipset_country
+
+  vars:
+
+    ansible_no_target_syslog: true
+
+  vars_files:
+
+    - vars.yaml
+
+  tasks:
+
+    - apt:
+        name:
+          - ipset
+          - iptables
+      become: true
+
+    - copy:
+        src: "../ipset-{{ item }}.txt"
+        dest: /root/
+        owner: root
+        group: root
+        mode: "0644"
+      loop: "{{ countries }}"
+      become: true
+
+    - command:
+        chdir: /root
+        argv:
+          - /sbin/ipset
+          - restore
+          - -file
+          - "ipset-{{ item }}.txt"
+      loop: "{{ countries }}"
+      become: true
+
+    - iptables:
+        chain: INPUT
+        jump: REJECT
+        match: set
+        match_set: "country-{{ item }}"
+        match_set_flags: src
+      loop: "{{ countries }}"
+      become: true

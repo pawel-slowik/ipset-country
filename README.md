@@ -14,6 +14,12 @@ filtering in the Linux kernel.
 	./ipset.py cn | sudo ipset restore
 	sudo iptables -A INPUT -m set --match-set country-cn src -j REJECT
 
+Included is an [Ansible](https://www.ansible.com/) playbook that can be used to
+set up multiple hosts with the same rules.
+
+    for country in $(yq -r '.countries[]' < ansible/vars.yaml); do ./ipset.py "$country" > "ipset-$country.txt"; done
+    ansible-playbook ansible/update.yaml
+
 ## Installation
 
 The script is not packaged. If you want to use it, clone or download this
