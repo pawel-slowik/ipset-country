@@ -110,14 +110,8 @@ def range_to_networks(network_range: str) -> Iterable[ipaddress.IPv4Network]:
 
 
 def list_networks(country_code: str, max_diff: int = 0) -> Iterable[ipaddress.IPv4Network]:
-    return common_networks(list_ipdeny(country_code), list_ripestat(country_code), max_diff)
-
-
-def common_networks(
-        ipdeny_networks: Iterable[ipaddress.IPv4Network],
-        ripestat_networks: Iterable[ipaddress.IPv4Network],
-        max_diff: int,
-    ) -> Iterable[ipaddress.IPv4Network]:
+    ipdeny_networks = list_ipdeny(country_code)
+    ripestat_networks = list_ripestat(country_code)
     comparision = compare_networks(ipdeny_networks, ripestat_networks)
     if comparision.differences_count > max_diff:
         raise ValueError("\n".join(comparision.describe()))
