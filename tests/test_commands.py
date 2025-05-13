@@ -1,37 +1,22 @@
 import ipaddress
-import re
-from typing import Iterable
+import time
+from pytest_mock.plugin import MockerFixture
 from ipset import ipset_commands
 
-TMP_SET_NAME_REGEXP = r"(?P<tmp_set_name>country-ZZ\.tmp-[a-zA-Z0-9]+)"
 
-
-def test_output() -> None:
-
-    def temporary_set_names(commands: Iterable[str], regexps: Iterable[str]) -> Iterable[str]:
-        for command, regexp in zip(commands, regexps):
-            match_dict = re.fullmatch(regexp, command).groupdict()
-            if "tmp_set_name" in match_dict:
-                yield match_dict["tmp_set_name"]
-
+def test_output(mocker: MockerFixture) -> None:
+    mocker.patch("time.gmtime", return_value=time.gmtime(1876543210))
     expected = [
         "create -exist country-ZZ hash:net",
-        "create TMP_SET_NAME_REGEXP hash:net",
-        "add TMP_SET_NAME_REGEXP 127.0.0.0/24",
-        "swap country-ZZ TMP_SET_NAME_REGEXP",
-        "destroy TMP_SET_NAME_REGEXP",
-    ]
-    expected_regexps = [
-        re.escape(expected_line).replace("TMP_SET_NAME_REGEXP", TMP_SET_NAME_REGEXP)
-        for expected_line in expected
+        "create country-ZZ.tmp-20290619060010 hash:net",
+        "add country-ZZ.tmp-20290619060010 127.0.0.0/24",
+        "swap country-ZZ country-ZZ.tmp-20290619060010",
+        "destroy country-ZZ.tmp-20290619060010",
     ]
 
     output = list(ipset_commands("ZZ", [ipaddress.IPv4Network("127.0.0.0/24")]))
 
-    assert len(output) == len(expected)
-    for expected_regexp, output_line in zip(expected_regexps, output):
-        assert re.fullmatch(expected_regexp, output_line)
-    assert len(set(temporary_set_names(output, expected_regexps))) == 1
+    assert output == expected
 
 
 def test_order() -> None:
