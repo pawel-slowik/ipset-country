@@ -82,6 +82,15 @@ def parse_ripestat(json_input: bytes) -> Iterable[ipaddress.IPv4Network]:
 
 
 def ripestat_resource_to_networks(network_spec: str) -> Iterable[ipaddress.IPv4Network]:
+
+    def range_to_networks(network_range: str) -> Iterable[ipaddress.IPv4Network]:
+        parts = network_range.split("-")
+        if len(parts) != 2:
+            raise ValueError
+        first = ipaddress.IPv4Address(parts[0])
+        last = ipaddress.IPv4Address(parts[1])
+        return ipaddress.summarize_address_range(first, last)
+
     try:
         return [ipaddress.IPv4Network(network_spec)]
     except ipaddress.AddressValueError:
@@ -98,15 +107,6 @@ def read_url(url: str) -> bytes:
         if response.getcode() != HTTPStatus.OK:
             raise ValueError(f"unexpected HTTP code: {response.getcode()}")
         return response.read()
-
-
-def range_to_networks(network_range: str) -> Iterable[ipaddress.IPv4Network]:
-    parts = network_range.split("-")
-    if len(parts) != 2:
-        raise ValueError
-    first = ipaddress.IPv4Address(parts[0])
-    last = ipaddress.IPv4Address(parts[1])
-    return ipaddress.summarize_address_range(first, last)
 
 
 def list_networks(country_code: str, max_diff: int = 0) -> Iterable[ipaddress.IPv4Network]:
