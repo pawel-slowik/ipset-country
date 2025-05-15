@@ -1,53 +1,52 @@
 import ipaddress
+from typing import List
 import pytest
 from ipset import ripestat_resource_to_networks
 
 
-def test_invalid_empty() -> None:
+@pytest.mark.parametrize(
+    "input_resource",
+    (
+        pytest.param("", id="empty"),
+        pytest.param("foo", id="invalid format"),
+        pytest.param("127.0.0.256", id="invalid single address"),
+        pytest.param("127.0.0.1-127.0.0.256", id="invalid address in range"),
+    )
+)
+def test_invalid(input_resource: str) -> None:
     with pytest.raises(ipaddress.AddressValueError):
-        ripestat_resource_to_networks("")
+        ripestat_resource_to_networks(input_resource)
 
 
-def test_invalid_format() -> None:
-    with pytest.raises(ipaddress.AddressValueError):
-        ripestat_resource_to_networks("foo")
-
-
-def test_invalid_single_address() -> None:
-    with pytest.raises(ipaddress.AddressValueError):
-        ripestat_resource_to_networks("127.0.0.256")
-
-
-def test_invalid_address_in_range() -> None:
-    with pytest.raises(ipaddress.AddressValueError):
-        ripestat_resource_to_networks("127.0.0.1-127.0.0.256")
-
-
-def test_single_address() -> None:
-    test = list(ripestat_resource_to_networks("127.0.0.1"))
-    expected = [ipaddress.IPv4Network("127.0.0.1/32")]
-    assert test == expected
-
-
-def test_single_address_as_range() -> None:
-    test = list(ripestat_resource_to_networks("192.168.10.1-192.168.10.1"))
-    expected = [ipaddress.IPv4Network("192.168.10.1/32")]
-    assert test == expected
-
-
-def test_class_c() -> None:
-    test = list(ripestat_resource_to_networks("127.0.0.0-127.0.0.255"))
-    expected = [ipaddress.IPv4Network("127.0.0.0/24")]
-    assert test == expected
-
-
-def test_two_c_classes() -> None:
-    test = list(ripestat_resource_to_networks("192.168.10.0-192.168.11.255"))
-    expected = [ipaddress.IPv4Network("192.168.10.0/23")]
-    assert test == expected
-
-
-def test_three_c_classes() -> None:
-    test = list(ripestat_resource_to_networks("192.168.10.0-192.168.12.255"))
-    expected = [ipaddress.IPv4Network("192.168.10.0/23"), ipaddress.IPv4Network("192.168.12.0/24")]
-    assert test == expected
+@pytest.mark.parametrize(
+    "input_resource,expected_networks",
+    (
+        pytest.param(
+            "127.0.0.1",
+            [ipaddress.IPv4Network("127.0.0.1/32")],
+            id="single address"
+        ),
+        pytest.param(
+            "192.168.10.1-192.168.10.1",
+            [ipaddress.IPv4Network("192.168.10.1/32")],
+            id="single address as range"
+        ),
+        pytest.param(
+            "127.0.0.0-127.0.0.255",
+            [ipaddress.IPv4Network("127.0.0.0/24")],
+            id="C class"
+        ),
+        pytest.param(
+            "192.168.10.0-192.168.11.255",
+            [ipaddress.IPv4Network("192.168.10.0/23")],
+            id="two C classes"
+        ),
+        pytest.param(
+            "192.168.10.0-192.168.12.255",
+            [ipaddress.IPv4Network("192.168.10.0/23"), ipaddress.IPv4Network("192.168.12.0/24")],
+            id="three C classes"
+        ),
+    )
+)
+def test_networks(input_resource: str, expected_networks: List[ipaddress.IPv4Network]) -> None:
+    assert list(ripestat_resource_to_networks(input_resource)) == expected_networks
