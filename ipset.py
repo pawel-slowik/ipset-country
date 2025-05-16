@@ -8,7 +8,7 @@ import urllib.request
 import time
 import http.client
 from http import HTTPStatus
-from typing import Iterable, Mapping, Collection, NamedTuple, Optional
+from typing import Iterable, Mapping, Collection, NamedTuple, Optional, Any
 import argparse
 
 
@@ -57,6 +57,15 @@ def get_ripestat_url(country_code: str) -> str:
 
 
 def parse_ripestat(json_input: bytes) -> Iterable[ipaddress.IPv4Network]:
+    response = json.loads(json_input)
+    check_ripestat_response(response)
+    return itertools.chain.from_iterable(
+        ripestat_resource_to_networks(input_network)
+        for input_network in response["data"]["resources"]["ipv4"]
+    )
+
+
+def check_ripestat_response(response: Any) -> None:
 
     def error_message(error_response: Mapping) -> Optional[str]:
         if "message" in error_response:
@@ -65,7 +74,6 @@ def parse_ripestat(json_input: bytes) -> Iterable[ipaddress.IPv4Network]:
             return "\n".join(error_response["messages"])
         return None
 
-    response = json.loads(json_input)
     if response["status_code"] != HTTPStatus.OK or response["status"] != "ok":
         raise ValueError(
             "error in RIPEstat response: " +
@@ -75,10 +83,6 @@ def parse_ripestat(json_input: bytes) -> Iterable[ipaddress.IPv4Network]:
         )
     if not response["data_call_status"].startswith("supported"):
         raise ValueError(f"unexpected RIPEstat data_call_status: {response['data_call_status']}")
-    return itertools.chain.from_iterable(
-        ripestat_resource_to_networks(input_network)
-        for input_network in response["data"]["resources"]["ipv4"]
-    )
 
 
 def ripestat_resource_to_networks(network_spec: str) -> Iterable[ipaddress.IPv4Network]:
