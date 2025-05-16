@@ -155,7 +155,7 @@ def create_target_set_name(country_code: str) -> str:
 
 
 def create_temporary_set_name(country_code: str) -> str:
-    return f"country-{country_code}.tmp-{time.strftime('%Y%m%d%H%M%S', time.gmtime())}"
+    return f"country-{country_code}.tmp-{time.strftime('%y%m%d%H%M%S', time.gmtime())}"
 
 
 def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:

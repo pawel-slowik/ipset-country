@@ -6,6 +6,7 @@ from ipset import create_target_set_name, create_temporary_set_name
 
 
 def test_length(set_name: str) -> None:
+    # IPSET_MAXNAMELEN defined at include/uapi/linux/netfilter/ipset/ip_set.h
     assert len(set_name) < 32
 
 
