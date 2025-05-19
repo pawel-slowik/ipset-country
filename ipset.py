@@ -5,6 +5,7 @@ import itertools
 import json
 import urllib.parse
 import urllib.request
+import urllib.error
 import time
 import http.client
 from http import HTTPStatus
@@ -35,7 +36,14 @@ class ComparisionResult(NamedTuple):
 
 def list_ipdeny(country_code: str) -> Iterable[Network]:
     yield from parse_ipdeny_v4(read_url(get_ipdeny_v4_url(country_code)))
-    yield from parse_ipdeny_v6(read_url(get_ipdeny_v6_url(country_code)))
+    try:
+        v6_response = read_url(get_ipdeny_v6_url(country_code))
+    except urllib.error.HTTPError as http_error:
+        if http_error.code == HTTPStatus.NOT_FOUND:
+            # some countries don't have any IPv6 presence
+            return
+        raise
+    yield from parse_ipdeny_v6(v6_response)
 
 
 def get_ipdeny_v4_url(country_code: str) -> str:
