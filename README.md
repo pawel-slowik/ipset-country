@@ -12,7 +12,8 @@ filtering in the Linux kernel.
 
 	./ipset.py -h
 	./ipset.py cn | sudo ipset restore
-	sudo iptables -A INPUT -m set --match-set country-cn src -j REJECT
+	sudo iptables -A INPUT -m set --match-set country-cn-v4 src -j REJECT
+	sudo ip6tables -A INPUT -m set --match-set country-cn-v6 src -j REJECT
 
 Included is an [Ansible](https://www.ansible.com/) playbook that can be used to
 set up multiple hosts with the same rules.
@@ -63,7 +64,3 @@ Here are some features unique to this script:
 
 - The script is an importable Python module, which means it can be easily
   integrated with other Python based solutions.
-
-## Limitations
-
-No IPv6 support.

@@ -38,9 +38,20 @@
 
     - iptables:
         chain: INPUT
+        ip_version: ipv4
         jump: REJECT
         match: set
-        match_set: "country-{{ item }}"
+        match_set: "country-{{ item }}-v4"
+        match_set_flags: src
+      loop: "{{ countries }}"
+      become: true
+
+    - iptables:
+        chain: INPUT
+        ip_version: ipv6
+        jump: REJECT
+        match: set
+        match_set: "country-{{ item }}-v6"
         match_set_flags: src
       loop: "{{ countries }}"
       become: true

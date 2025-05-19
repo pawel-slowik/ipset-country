@@ -20,4 +20,4 @@ def test_characters(set_name: str) -> None:
 
 @pytest.fixture(params=[create_target_set_name, create_temporary_set_name])
 def set_name(request):  # type: ignore # currently no way to properly typehint fixtures
-    return request.param("ZZ")
+    return request.param("ZZ", 4)

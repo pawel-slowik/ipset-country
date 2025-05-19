@@ -1,7 +1,7 @@
 import ipaddress
 from typing import List
 import pytest
-from ipset import compare_networks, ComparisionResult
+from ipset import compare_networks, Network, ComparisionResult
 
 
 @pytest.mark.parametrize(
@@ -65,8 +65,8 @@ from ipset import compare_networks, ComparisionResult
     )
 )
 def test_comparision(
-        ipdeny_networks: List[ipaddress.IPv4Network],
-        ripestat_networks: List[ipaddress.IPv4Network],
+        ipdeny_networks: List[Network],
+        ripestat_networks: List[Network],
         expected_result: ComparisionResult,
 ) -> None:
     comparision = compare_networks(ipdeny_networks, ripestat_networks)
