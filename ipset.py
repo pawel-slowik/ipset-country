@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import ipaddress
+import string
 import itertools
 import json
 import urllib.parse
@@ -214,11 +215,31 @@ def ipset(country_code: str, max_diff: int = 0) -> Iterable[str]:
     return ipset_commands(country_code, list_networks(country_code, max_diff))
 
 
+def normalize_country_code(country_code: str) -> str:
+    letters = string.ascii_letters
+    if len(country_code) == 2 and country_code[0] in letters and country_code[1] in letters:
+        return country_code.lower()
+    raise ValueError(
+        f"invalid country code '{country_code}', "
+        "use a two letter ISO-3166 code: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2"
+    )
+
+
 def main() -> None:
+
+    def country_code_argument(country_code: str) -> str:
+        try:
+            return normalize_country_code(country_code)
+        except ValueError as value_error:
+            raise argparse.ArgumentTypeError(value_error)
+
     parser = argparse.ArgumentParser(
         description="Generate a country based IP set for packet filtering in the Linux kernel."
     )
-    parser.add_argument("country_code", help="two letter ISO-3166 country code")
+    parser.add_argument(
+        "country_code", type=country_code_argument,
+        help="two letter ISO-3166 country code"
+    )
     parser.add_argument(
         "-i", dest="max_diff", type=int, metavar="N", default=0,
         help="ignore up to N networks of difference between data sources"
