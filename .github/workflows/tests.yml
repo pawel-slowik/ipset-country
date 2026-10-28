@@ -1,6 +1,13 @@
 name: tests
 
-on: [push]
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
 
@@ -12,7 +19,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -22,9 +29,37 @@ jobs:
       - name: Install test dependencies
         run: pip install -U -r requirements-test.txt
       - name: Test with pytest
-        run: pytest --cov
-      - name: Upload coverage data to Codecov
-        continue-on-error: true
-        run: |
-          pip install codecov
-          codecov
+        run: pytest
+
+  coverage:
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+      - name: Install test dependencies
+        run: pip install -U -r requirements-test.txt
+      - name: Test with coverage
+        run: pytest --cov --cov-report=xml:coverage_cobertura.xml --cov-report=html:coverage_html
+      - name: install coverage badge dependencies
+        run: sudo apt-get install -y xsltproc
+      - name: generate coverage badge
+        run: xsltproc -o coverage_html/badge.svg tests/coverage/cobertura2svg.xslt coverage_cobertura.xml
+      - name: upload code coverage artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: './coverage_html'
+      - name: Deploy code coverage site
+        id: deployment
+        uses: actions/deploy-pages@v5

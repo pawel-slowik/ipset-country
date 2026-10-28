@@ -2,4 +2,5 @@
 /.mypy_cache
 /.coverage
 /htmlcov
+/coverage_cobertura.xml
 /ansible/vars.yaml

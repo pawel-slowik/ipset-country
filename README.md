@@ -2,8 +2,8 @@
 [![Coverage][coverage-badge]][coverage-url]
 
 [build-badge]: https://github.com/pawel-slowik/ipset-country/workflows/tests/badge.svg
-[coverage-badge]: https://codecov.io/gh/pawel-slowik/ipset-country/branch/master/graph/badge.svg
-[coverage-url]: https://codecov.io/gh/pawel-slowik/ipset-country
+[coverage-badge]: https://pawel-slowik.github.io/ipset-country/badge.svg
+[coverage-url]: https://pawel-slowik.github.io/ipset-country/
 
 Generate country based [IP sets](http://ipset.netfilter.org/) for packet
 filtering in the Linux kernel.
